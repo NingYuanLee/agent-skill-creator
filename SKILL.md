@@ -2,13 +2,15 @@
 name: agent-skill-creator
 description: >-
   新建、安装、更新或改造 agent 技能时使用：把一份流程或规范文档变成可被加载的技能、
-  选定技能名、写 frontmatter 触发描述、把源文件放到 D:\tools\skills 并以目录联接安装到
-  当前用户的 .agents\skills 目录。用户提到「做成技能」「新建技能」「装到 .agents/skills」「这个文件放着没用」时使用。
+  选定技能名、写 frontmatter 触发描述、按当前环境的源目录和安装约定部署技能。
+  用户提到「做成技能」「新建技能」「装到 .agents/skills」「这个文件放着没用」时使用。
 metadata:
   short-description: 新建与安装 agent 技能
 ---
 
 # agent-skill-creator
+
+本技能中的 `D:\tools\skills` 是原作者本机的示例约定，不是其他用户的强制路径。使用时以当前用户明确指定或已有的技能源目录和安装目录为准；未指定时先确认可用位置。脚本位于本技能目录的 `scripts/install-skill.ps1`，不要假设技能安装在示例路径。下面的 Windows junction 方法仅适用于 Windows；其他系统遵循其 Agent 的安装文档。
 
 ## 何时用
 
@@ -65,10 +67,10 @@ metadata:
 ## 安装与更新
 
 ```powershell
-pwsh -NoProfile -File 'D:\tools\skills\agent-skill-creator\scripts\install-skill.ps1' -Name <name>
+pwsh -NoProfile -File '<本技能目录>\scripts\install-skill.ps1' -Name <name> -SourceRoot '<技能源目录>' -InstallRoot '<安装目录>'
 ```
 
-脚本行为：校验技能名格式 → 校验源 `SKILL.md` 存在且 `name` 与目录名一致 → 删除旧安装位（若是链接用 `[IO.Directory]::Delete()`，避免 `Remove-Item -Recurse` 误删源内容）→ 建 junction → 回读校验。
+脚本行为：校验技能名和源文件 → 创建安装目录 → 仅替换已有 junction；同名实体目录或其他链接则停止并保留 → 建 junction → 回读校验。默认源目录为脚本所在技能目录的父目录；安装目录默认为当前用户的 `.agents\skills`，可用参数覆盖。
 
 - 删除技能：先删安装位链接，再删源目录。
 - 移动 `D:\tools\skills` 会让所有技能失效，移动后需批量重建链接。

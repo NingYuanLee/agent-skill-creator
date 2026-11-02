@@ -1,6 +1,6 @@
 param(
   [Parameter(Mandatory = $true)][string]$Name,
-  [string]$SourceRoot = 'D:\tools\skills',
+  [string]$SourceRoot = (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)),
   [string]$InstallRoot = (Join-Path $env:USERPROFILE '.agents\skills')
 )
 
@@ -24,13 +24,17 @@ if ($head -notmatch $namePattern) {
 }
 
 $inst = Join-Path $InstallRoot $Name
+if (-not (Test-Path -LiteralPath $InstallRoot)) {
+  New-Item -ItemType Directory -Path $InstallRoot -Force | Out-Null
+}
 if (Test-Path -LiteralPath $inst) {
   $item = Get-Item -LiteralPath $inst -Force
   if ($item.LinkType) {
+    if ($item.LinkType -ne 'Junction') { throw "existing install is not a junction: $inst" }
     [IO.Directory]::Delete($inst)
   }
   else {
-    Remove-Item -LiteralPath $inst -Recurse -Force
+    throw "existing install is a real directory; refusing to delete: $inst"
   }
 }
 
